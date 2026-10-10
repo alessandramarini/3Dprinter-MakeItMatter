@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Maker Bridge Enterprise - 3D Service ERP</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-base: #09090b;          
+            --bg-surface: #18181b;
+            --bg-surface-hover: #27272a;
+            
+            --text-primary: #f4f4f5;       
+            --text-secondary: #a1a1aa;
+            
+            --border-subtle: #3f3f46;
+            --border-focus: #52525b;
+            
+            /* Professional Color Palette */
+            --accent-cyan: #06b6d4;
+            --accent-cyan-dim: rgba(6, 182, 212, 0.15);
+            --accent-orange: #f97316;
+            --accent-orange-dim: rgba(249, 115, 22, 0.15);
+            --accent-green: #10b981;
+            --accent-purple: #a855f7;
+            
+            --font-sans: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            margin: 0; padding: 0; min-height: 100vh;
+            display: flex; flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* UI Components */
+        .glass-header {
+            background: rgba(9, 9, 11, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-subtle);
+            background: rgba(255,255,255,0.02);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .card-title {
+            font-size: 0.875rem; font-weight: 700; text-transform: uppercase; 
+            letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px;
+        }
+
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+        
+        .input, .select, .textarea {
+            background: rgba(0,0,0,0.5); border: 1px solid var(--border-subtle);
+            color: var(--text-primary); padding: 0.75rem 1rem; border-radius: 8px;
+            font-family: var(--font-sans); font-size: 0.875rem; transition: all 0.2s;
+            width: 100%;
+        }
+        .textarea { resize: vertical; min-height: 80px; }
+        .input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--accent-cyan); box-shadow: 0 0 0 3px var(--accent-cyan-dim); background: var(--bg-base); }
+        .input-mono { font-family: var(--font-mono); font-weight: 700; }
+
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 600; font-size: 0.875rem;
+            cursor: pointer; transition: all 0.2s; border: none; outline: none;
+        }
+        .btn-primary { background: var(--accent-cyan); color: #000; }
+        .btn-primary:hover { background: #0891b2; transform: translateY(-1px); box-shadow: 0 4px 12px var(--accent-cyan-dim); }
+        .btn-primary:active { transform: translateY(0); }
+        
+        .btn-secondary { background: transparent; color: var(--text-primary); border: 1px solid var(--border-subtle); }
+        .btn-secondary:hover { background: var(--bg-surface-hover); border-color: var(--border-focus); }
+        
+        .btn-success { background: var(--accent-green); color: #000; }
+        .btn-success:hover { background: #059669; box-shadow: 0 4px 12px rgba(16,185,129,0.2); transform: translateY(-1px); }
+
+        .btn-nav { background: transparent; color: var(--text-secondary); padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; transition: all 0.2s; }
+        .btn-nav:hover { background: var(--bg-surface-hover); color: white; }
+        .btn-nav.active { background: var(--accent-cyan-dim); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
+
+        .dropzone {
+            border: 2px dashed var(--border-subtle); border-radius: 12px;
+            padding: 2.5rem 1.5rem; text-align: center; cursor: pointer; transition: all 0.2s;
+            background: rgba(0,0,0,0.3); display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .dropzone:hover, .dropzone.dragover { border-color: var(--accent-cyan); background: var(--accent-cyan-dim); }
+        .dropzone.success { border-color: var(--accent-green); background: rgba(16, 185, 129, 0.1); }
+        
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.875rem; }
+        .data-table th, .data-table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-subtle); }
+        .data-table th { color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; background: rgba(0,0,0,0.3); }
+        .data-table tbody tr { transition: background 0.2s; }
+        .data-table tbody tr:hover { background: var(--bg-surface-hover); }
+
+        /* Modals & Toasts */
+        .modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s; padding: 1rem;
+        }
+        .modal.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background: var(--bg-base); border: 1px solid var(--border-subtle);
+            border-radius: 16px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+            transform: translateY(20px) scale(0.95); transition: transform 0.3s;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        }
+        .modal.active .modal-content { transform: translateY(0) scale(1); }
+
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            background: var(--bg-surface); border-left: 4px solid var(--accent-cyan);
+            color: white; padding: 1rem 1.5rem; border-radius: 8px; font-size: 0.875rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            animation: slideIn 0.3s ease-out forwards, fadeOut 0.3s ease-in 2.7s forwards;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .toast.error { border-left-color: #ef4444; }
+        .toast.success { border-left-color: var(--accent-green); }
+
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+        @keyframes pulse-highlight { 0% { box-shadow: 0 0 0 0 var(--accent-cyan-dim); } 70% { box-shadow: 0 0 0 10px rgba(6,182,212,0); } 100% { box-shadow: 0 0 0 0 rgba(6,182,212,0); } }
+        
+        .highlight-update { animation: pulse-highlight 0.8s ease-out; border-color: var(--accent-cyan) !important; }
+
+        /* Tabs per Outsourcing & App Views */
+        .tab-btn { padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-secondary); transition: all 0.2s; }
+        .tab-btn.active { color: white; border-bottom-color: var(--accent-cyan); background: rgba(255,255,255,0.05); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        
+        .app-view { display: none; flex: 1; }
+        .app-view.active { display: flex; animation: fadeIn 0.3s; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* Status Badges */
+        .status-new { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .status-printing { background: rgba(245, 158, 11, 0.1); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .status-post { background: rgba(168, 85, 247, 0.1); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+        .status-done { background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        /* Order Card */
+        .order-card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.5rem; transition: transform 0.2s, box-shadow 0.2s; }
+        .order-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.4); border-color: var(--border-focus); }
+
+        @media print {
+            body { background: white !important; color: black !important; margin: 0; padding: 0; }
+            #app-container, .modal, #toast-container, .no-print { display: none !important; }
+            #print-container { display: block !important; position: static !important; }
+            
+            body[data-print-target="blank"] .print-filled { display: none !important; }
+            body[data-print-target="filled"] .print-blank { display: none !important; }
+
+            @page { size: A4; margin: 15mm; }
+            .a4-sheet { width: 100%; height: auto; font-family: 'Inter', sans-serif; color: black; page-break-after: always; }
+            .print-title { font-size: 22pt; font-weight: 800; text-transform: uppercase; border-bottom: 3px solid black; padding-bottom: 10px; margin-bottom: 25px; letter-spacing: -0.5px; }
+            .print-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 10pt; }
+            .print-table th, .print-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+            .print-table th { background-color: #f4f4f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-weight: 700; }
+            .write-line { border-bottom: 1px dashed #999; display: inline-block; width: 100%; height: 24px; }
+        }
+        #print-container { display: none; }
+    </style>
+</head>
+<body class="text-sm">
+
+    <div id="app-container" class="w-full flex flex-col min-h-screen">
+        
+        <!-- HEADER & NAVIGATION -->
+        <header class="glass-header sticky top-0 z-50 w-full px-4 md:px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-mono font-bold tracking-tighter flex items-center gap-2">
+                    MAKER<span class="text-[var(--accent-cyan)]">_BRIDGE</span>
+                    <span class="bg-[var(--accent-cyan)] text-black text-[0.6rem] px-1.5 py-0.5 rounded font-bold tracking-widest uppercase">Enterprise</span>
+                </h1>
+                <p class="text-[var(--text-secondary)] text-xs mt-1 font-medium tracking-wide">3D Service ERP & Lifecycle Management</p>
+            </div>
+            
+            <!-- App Navigation -->
+            <nav class="flex gap-2 bg-black/40 p-1 border border-[var(--border-subtle)] rounded-xl w-full md:w-auto overflow-x-auto">
+                <button onclick="switchAppView('workspace')" id="nav-workspace" class="btn-nav active flex items-center gap-2 whitespace-nowrap">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                    Preventivatore
+                </button>
+                <button onclick="switchAppView('dashboard')" id="nav-dashboard" class="btn-nav flex items-center gap-2 whitespace-nowrap">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    Gestione Ordini <span id="nav-order-count" class="badge bg-blue-500 text-white ml-1">0</span>
+                </button>
+            </nav>
+
+            <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                <button onclick="openModal('modal-settings')" class="btn btn-secondary flex-1 md:flex-none justify-center text-xs px-3" title="Impostazioni Base">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- VIEW 1: WORKSPACE (PREVENTIVATORE) -->
+        <main id="view-workspace" class="app-view active w-full max-w-[1600px] mx-auto p-4 md:p-8 grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- LEFT COLUMN: Data Extraction & Inputs -->
+            <div class="lg:col-span-4 flex flex-col gap-6 w-full">
+                
+                <!-- NEW: DATI CLIENTE -->
+                <div class="card border-[var(--accent-cyan)] shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+                    <div class="card-header bg-[rgba(6,182,212,0.05)]">
+                        <h2 class="card-title text-[var(--accent-cyan)]">👤 Dati Cliente & Progetto</h2>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <div class="input-group">
+                            <label class="label">Riferimento Progetto / Ordine</label>
+                            <input type="text" id="project-name" class="input font-bold" placeholder="Es. Prototipo Ingranaggio V3" onchange="saveWorkspaceState()">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="input-group">
+                                <label class="label">Nome Cliente / Azienda</label>
+                                <input type="text" id="client-name" class="input" placeholder="Acme Corp" onchange="saveWorkspaceState()">
+                            </div>
+                            <div class="input-group">
+                                <label class="label">Contatto (Email/Tel)</label>
+                                <input type="text" id="client-contact" class="input" placeholder="info@acme.com" onchange="saveWorkspaceState()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 1: G-CODE DRAG & DROP -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title text-white">1. Analisi File (G-Code / 3MF)</h2>
+                    </div>
+                    <div class="p-5">
+                        <div id="gcode-dropzone" class="dropzone"
+                             ondragover="handleDragOver(event)" 
+                             ondragleave="handleDragLeave(event)" 
+                             ondrop="handleDrop(event)"
+                             onclick="document.getElementById('gcode-file').click()">
+                            <svg class="w-10 h-10 text-[var(--text-secondary)] mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            <span class="text-sm font-semibold text-gray-300" id="drop-text">Trascina il file generato dallo Slicer qui, oppure clicca per sfogliare</span>
+                            <span class="text-xs text-[var(--text-secondary)] mt-2">Supporta .gcode, .bgcode, .3mf</span>
+                            <input type="file" id="gcode-file" accept=".gcode,.bgcode,.3mf" class="hidden" onchange="handleFileSelect(event)">
+                        </div>
+
+                        <!-- Extraction Results -->
+                        <div class="grid grid-cols-2 gap-4 mt-5">
+                            <div class="input-group">
+                                <label class="label text-[var(--accent-cyan)] flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Tempo (Ore)
+                                </label>
+                                <input type="number" id="ext-hours" class="input input-mono text-lg" value="0" step="0.1">
+                            </div>
+                            <div class="input-group">
+                                <label class="label text-[var(--accent-orange)] flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg>
+                                    Peso (Grammi)
+                                </label>
+                                <input type="number" id="ext-grams" class="input input-mono text-lg" value="0" step="1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2: PART SETTINGS -->
+                <div class="card">
+                    <div class="card-header border-t-4 border-t-[var(--accent-cyan)] p-0">
+                        <div class="w-full flex">
+                            <button onclick="switchTab('internal')" id="tab-internal" class="tab-btn active flex-1 py-3 text-center border-r border-[var(--border-subtle)] flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                                In-House
+                            </button>
+                            <button onclick="switchTab('external')" id="tab-external" class="tab-btn flex-1 py-3 text-center flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Conto Terzi
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        
+                        <div class="input-group mb-4">
+                            <label class="label">Identificativo Componente / Lotto</label>
+                            <input type="text" id="part-name" class="input" placeholder="Es. Scocca Base Posteriore">
+                        </div>
+
+                        <!-- TAB: IN-HOUSE -->
+                        <div id="content-internal" class="tab-content active space-y-4">
+                            <div class="bg-black/30 p-4 rounded-xl border border-[var(--border-subtle)] space-y-4">
+                                <h3 class="text-xs font-bold text-[var(--accent-orange)] uppercase flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                                    Filamento / Resina
+                                </h3>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="input-group">
+                                        <label class="label">Costo Bobina (€)</label>
+                                        <input type="number" id="param-spool-cost" class="input input-mono" value="25.00" step="1">
+                                    </div>
+                                    <div class="input-group">
+                                        <label class="label">Peso Bobina (g)</label>
+                                        <select id="param-spool-weight" class="select input-mono">
+                                            <option value="1000">1000g (1 Kg)</option>
+                                            <option value="750">750g</option>
+                                            <option value="500">500g</option>
+                                            <option value="3000">3000g (Maxi)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB: EXTERNAL / CONTO TERZI -->
+                        <div id="content-external" class="tab-content space-y-4">
+                            <div class="bg-purple-900/20 p-4 rounded-xl border border-purple-500/30 space-y-4">
+                                <div class="input-group">
+                                    <label class="label text-purple-300">Fornitore / Service Esterno</label>
+                                    <select id="ext-provider" class="select border-purple-500/50 text-purple-100 bg-purple-900/40">
+                                        <option value="JLCPCB">📦 JLCPCB (Cina - Plastica/Resina LowCost)</option>
+                                        <option value="Weerg">🏭 Weerg (Italia - HP MJF / SLA Industriale)</option>
+                                        <option value="PCBWay">📦 PCBWay (Cina - Materiali Speciali)</option>
+                                        <option value="Protolabs">⚙️ Protolabs (Globale - Alta Precisione CNC/3D)</option>
+                                        <option value="Locale">📍 Partner Locale / Altro Service</option>
+                                    </select>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="input-group">
+                                        <label class="label text-purple-300">Costo Unitario (€)</label>
+                                        <input type="number" id="ext-unit-cost" class="input input-mono border-purple-500/50 focus:border-purple-400" value="0.00" step="0.10">
+                                    </div>
+                                    <div class="input-group">
+                                        <label class="label text-purple-300">Quantità</label>
+                                        <input type="number" id="ext-qty" class="input input-mono border-purple-500/50" value="1" step="1">
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label class="label text-purple-300">Spese Sped. / Dogana Totali (€)</label>
+                                    <input type="number" id="ext-shipping" class="input input-mono border-purple-500/50" value="0.00" step="1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="addPartToAssembly()" class="btn btn-primary w-full py-3 mt-5 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                            + AGGIUNGI ALLA DISTINTA (BOM)
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: Multi-Part Assembly & Financial Dashboard -->
+            <div class="lg:col-span-8 flex flex-col gap-6 w-full">
+                
+                <!-- STEP 3: MULTI-PART ASSEMBLY (BOM) -->
+                <div class="card flex-1 flex flex-col border-[var(--border-subtle)] shadow-xl">
+                    <div class="card-header bg-black/40 border-b border-[var(--border-subtle)]">
+                        <h2 class="card-title text-white">2. Distinta Base di Produzione (BOM)</h2>
+                        <div class="flex gap-2">
+                            <button onclick="printBlankQuote()" class="btn btn-secondary text-xs px-2 py-1">📝 Modulo Vuoto</button>
+                            <button onclick="printFilledQuote()" class="btn btn-secondary text-xs px-2 py-1 border-[var(--accent-cyan)] text-[var(--accent-cyan)]">📄 Stampa Prev.</button>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto flex-1 bg-[var(--bg-base)]">
+                        <table class="data-table" id="assembly-table">
+                            <thead>
+                                <tr>
+                                    <th>Componente</th>
+                                    <th class="text-right">Peso (g)</th>
+                                    <th class="text-right">Tempo (h)</th>
+                                    <th class="text-right">Costo Vivo Base</th>
+                                    <th class="w-10"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="assembly-list">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="p-4 bg-[var(--bg-surface)] border-t border-[var(--border-subtle)] flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div class="flex gap-4">
+                            <button onclick="clearAssembly()" class="text-xs text-red-400 hover:text-red-300 font-semibold uppercase tracking-wider">Svuota Distinta</button>
+                        </div>
+                        <div class="flex gap-6 text-sm font-mono">
+                            <div class="flex flex-col items-end"><span class="text-[10px] text-[var(--text-secondary)] uppercase">Tot. Grammi</span><span id="tot-grams" class="text-[var(--accent-orange)] font-bold text-lg">0</span></div>
+                            <div class="flex flex-col items-end"><span class="text-[10px] text-[var(--text-secondary)] uppercase">Tot. Ore</span><span id="tot-hours" class="text-[var(--accent-cyan)] font-bold text-lg">0.0</span></div>
+                            <div class="flex flex-col items-end"><span class="text-[10px] text-[var(--text-secondary)] uppercase">Somma Costi Vivi</span><span id="tot-raw-cost" class="text-white font-bold text-lg">€ 0.00</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 4: ENTERPRISE FINANCIAL MODEL -->
+                <div class="card border-[var(--accent-green)] shadow-[0_0_30px_rgba(16,185,129,0.05)]">
+                    <div class="card-header bg-[rgba(16,185,129,0.05)]">
+                        <h2 class="card-title text-[var(--accent-green)]">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            3. Generatore Finanziario & Ordine
+                        </h2>
+                    </div>
+                    
+                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Modificatori di Prezzo -->
+                        <div class="space-y-5">
+                            <p class="text-xs text-[var(--text-secondary)] leading-relaxed">
+                                Calcola il prezzo finale applicando rischio e ricarico aziendale.
+                            </p>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="input-group">
+                                    <label class="label text-yellow-500" title="Copre statisticamente le stampe fallite">Fondo Rischio (%)</label>
+                                    <input type="number" id="calc-failure-rate" class="input input-mono" value="10" step="1" oninput="calculateFinalQuote(); saveWorkspaceState();">
+                                </div>
+                                <div class="input-group">
+                                    <label class="label text-[var(--accent-green)]">Margine Desiderato (%)</label>
+                                    <input type="number" id="calc-margin" class="input input-mono border-[var(--accent-green)]" value="60" step="5" oninput="calculateFinalQuote(); saveWorkspaceState();">
+                                </div>
+                            </div>
+
+                            <div class="input-group border-t border-[var(--border-subtle)] pt-4">
+                                <label class="label">Manodopera Extra (Post-Produzione / Design €)</label>
+                                <input type="number" id="calc-labor" class="input input-mono" value="15" step="1" oninput="calculateFinalQuote(); saveWorkspaceState();">
+                            </div>
+                        </div>
+
+                        <!-- Risultato Finale -->
+                        <div class="bg-black/60 border border-[var(--border-subtle)] rounded-xl p-6 flex flex-col justify-center relative overflow-hidden">
+                            <div class="absolute -right-10 -top-10 w-32 h-32 bg-[var(--accent-green)] rounded-full blur-[60px] opacity-10 pointer-events-none"></div>
+                            
+                            <div class="flex justify-between text-sm text-[var(--text-secondary)] mb-2">
+                                <span>Costo Vivo (Mat+Macchina+Outsource):</span>
+                                <span id="final-raw" class="font-mono text-white">€ 0.00</span>
+                            </div>
+                            <div class="flex justify-between text-sm text-[var(--text-secondary)] mb-2">
+                                <span>Fondo Copertura Rischio (<span id="lbl-risk">10</span>%):</span>
+                                <span id="final-risk" class="font-mono text-yellow-500">+ € 0.00</span>
+                            </div>
+                            <div class="flex justify-between text-sm text-[var(--text-secondary)] mb-4 pb-4 border-b border-[var(--border-subtle)]">
+                                <span>Manodopera Aggiuntiva (Fissa):</span>
+                                <span id="final-labor" class="font-mono text-white">+ € 0.00</span>
+                            </div>
+                            
+                            <div class="mt-2 flex flex-col items-end">
+                                <span class="block text-[10px] uppercase font-bold text-[var(--accent-green)] tracking-widest mb-1">Prezzo di Vendita Suggerito</span>
+                                <span id="final-quote" class="text-5xl font-bold font-mono text-white tracking-tighter drop-shadow-md">€ 0.00</span>
+                                <span class="text-xs text-[var(--text-secondary)] mt-1 mb-4">IVA / Tasse Escluse</span>
+                                
+                                <button onclick="saveToOrders()" class="btn btn-success w-full font-bold shadow-[0_0_15px_rgba(16,185,129,0.3)] text-base py-3">
+                                    💾 SALVA NEL GESTIONALE ORDINI
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- VIEW 2: ORDER MANAGEMENT DASHBOARD (CRM / ERP) -->
+        <main id="view-dashboard" class="app-view w-full max-w-[1600px] mx-auto p-4 md:p-8 flex-col gap-6">
+            
+            <div class="flex justify-between items-end mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-1">Dashboard Ordini e Progetti</h2>
+                    <p class="text-[var(--text-secondary)] text-sm">Gestisci il ciclo di vita delle stampe, dall'accettazione alla consegna.</p>
+                </div>
+            </div>
+
+            <!-- Kanban / Order List -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="orders-grid">
+                <!-- Ordini popolati via JS -->
+            </div>
+
+            <div id="no-orders-msg" class="text-center py-20 text-[var(--text-secondary)] hidden">
+                <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                <p class="text-lg font-medium">Nessun ordine nel gestionale.</p>
+                <p class="text-sm">Crea un preventivo e clicca su "Salva nel Gestionale" per vederlo qui.</p>
+                <button onclick="switchAppView('workspace')" class="btn btn-primary mt-6">Vai al Preventivatore</button>
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- MODALE IMPOSTAZIONI AZIENDALI -->
+    <div id="modal-settings" class="modal" onclick="closeModalOnOutsideClick(event, 'modal-settings')">
+        <div class="modal-content">
+            <div class="card-header bg-[var(--bg-surface)]">
+                <h2 class="card-title">⚙️ Impostazioni Base Service 3D</h2>
+                <button onclick="closeModal('modal-settings')" class="text-[var(--text-secondary)] hover:text-white text-xl">&times;</button>
+            </div>
+            <div class="p-6 space-y-6">
+                <p class="text-sm text-[var(--text-secondary)]">Questi valori vengono salvati nel browser. Verranno applicati automaticamente ai nuovi componenti aggiunti in In-House.</p>
+                
+                <div class="space-y-4 bg-black/30 p-4 rounded-xl border border-[var(--border-subtle)]">
+                    <h3 class="text-xs font-bold text-[var(--accent-cyan)] uppercase">Ammortamento Macchine (In-House)</h3>
+                    <div class="input-group">
+                        <label class="label">Tariffa Oraria Macchina (€/h)</label>
+                        <p class="text-xs text-[var(--text-secondary)] mb-1">Copre ammortamento stampante, corrente elettrica, usura (ugelli, cinghie).</p>
+                        <input type="number" id="global-hourly-rate" class="input input-mono" value="1.50" step="0.10" onchange="saveGlobalSettings()">
+                    </div>
+                    <div class="input-group mt-2">
+                        <label class="label">Setup Fee Fisso (€ a pezzo)</label>
+                        <p class="text-xs text-[var(--text-secondary)] mb-1">Copre il tempo dell'operatore per preparare il file (slicing), pulire il piatto e lanciare la stampa.</p>
+                        <input type="number" id="global-setup-fee" class="input input-mono" value="3.00" step="0.5" onchange="saveGlobalSettings()">
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <button onclick="clearAllData()" class="btn btn-secondary w-full text-red-400 border-red-900/50 hover:bg-red-900/20 hover:border-red-500">Reset Totale App</button>
+                    <button onclick="closeModal('modal-settings'); showToast('Impostazioni Salvate', 'success');" class="btn btn-primary w-full">Salva e Chiudi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE DETTAGLIO ORDINE (TODO LIST) -->
+    <div id="modal-order-details" class="modal" onclick="closeModalOnOutsideClick(event, 'modal-order-details')">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="card-header bg-[var(--bg-surface)] border-b border-[var(--border-subtle)]">
+                <h2 class="card-title text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                    Gestione Commessa
+                </h2>
+                <button onclick="closeModal('modal-order-details')" class="text-[var(--text-secondary)] hover:text-white text-xl">&times;</button>
+            </div>
+            
+            <div class="p-0 flex flex-col md:flex-row">
+                <!-- Info & Status -->
+                <div class="p-6 bg-black/20 w-full md:w-1/3 border-r border-[var(--border-subtle)] space-y-6">
+                    <div>
+                        <p class="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-1">Progetto</p>
+                        <h3 id="detail-project" class="text-lg font-bold text-white">Nome Progetto</h3>
+                        <p id="detail-date" class="text-xs text-[var(--text-secondary)] mt-1">Data</p>
+                    </div>
+                    
+                    <div>
+                        <p class="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-1">Cliente</p>
+                        <p id="detail-client" class="text-sm font-semibold text-white">Nome Cliente</p>
+                        <p id="detail-contact" class="text-xs text-[var(--accent-cyan)]">Contatto</p>
+                    </div>
+
+                    <div class="p-4 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-lg">
+                        <p class="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-1">Valore Ordine</p>
+                        <p id="detail-total" class="text-2xl font-mono font-bold text-[var(--accent-green)]">€ 0.00</p>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="label">Stato Attuale</label>
+                        <select id="detail-status" class="select font-bold" onchange="updateDetailStatus()">
+                            <option value="new">Da Iniziare (Nuovo)</option>
+                            <option value="printing">In Lavorazione / Stampa</option>
+                            <option value="post">Post-Produzione / Assemblaggio</option>
+                            <option value="done">Completato / Consegnato</option>
+                        </select>
+                    </div>
+                    
+                    <button id="btn-load-workspace" class="btn btn-secondary w-full text-xs">Apri nel Preventivatore</button>
+                    <button id="btn-delete-order" class="btn bg-red-900/20 text-red-400 border border-red-900/50 hover:bg-red-900/40 hover:border-red-500 w-full text-xs">Elimina Ordine</button>
+                </div>
+                
+                <!-- ToDo Checklist -->
+                <div class="p-6 w-full md:w-2/3 space-y-4">
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wider border-b border-[var(--border-subtle)] pb-2">To-Do List Operativa</h3>
+                    <p class="text-xs text-[var(--text-secondary)]">Spunta le attività per tracciare il progresso. Il salvataggio è automatico.</p>
+                    
+                    <div id="detail-checklist" class="space-y-2 mt-4">
+                        <!-- Populated by JS -->
+                    </div>
+                    
+                    <div class="mt-6 border-t border-[var(--border-subtle)] pt-4">
+                        <h3 class="text-xs font-bold text-white uppercase tracking-wider mb-2">Note Interne (Private)</h3>
+                        <textarea id="detail-notes" class="textarea text-sm" placeholder="Es. Usare PETG nero opaco per le scocche. Spedire con corriere espresso." onchange="saveOrderNotes()"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenitore Notifiche (Toast) -->
+    <div id="toast-container"></div>
+
+    <!-- CONTENITORI DI STAMPA A4 -->
+    <div id="print-container">
+        
+        <!-- MODULO VUOTO (Da compilare a mano) -->
+        <div class="a4-sheet print-blank">
+            <div class="print-title">MAKER BRIDGE - Preventivo Produzione 3D</div>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 25px; font-size: 11pt;">
+                <div style="width: 48%;">
+                    <p style="margin-bottom: 8px;"><strong>Cliente / Azienda:</strong> <span class="write-line"></span></p>
+                    <p><strong>Contatto (Email/Tel):</strong> <span class="write-line"></span></p>
+                </div>
+                <div style="width: 48%;">
+                    <p style="margin-bottom: 8px;"><strong>Data:</strong> <span class="write-line"></span></p>
+                    <p><strong>Rif. Progetto:</strong> <span class="write-line"></span></p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 10px; font-size:12pt; text-transform: uppercase;">Distinta Base Componenti</h3>
+            <table class="print-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Descrizione / ID Componente</th>
+                        <th style="width: 20%">Materiale & Colore</th>
+                        <th style="width: 15%">Peso (g)</th>
+                        <th style="width: 10%">Q.tà</th>
+                        <th style="width: 15%">Costo Un.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><br><br></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td><br><br></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td><br><br></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td><br><br></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td><br><br></td><td></td><td></td><td></td><td></td></tr>
+                </tbody>
+            </table>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 30px;">
+                <table style="width: 350px; border-collapse: collapse; font-size:11pt;">
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Totale Lavorazione Macchina:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; width: 120px;"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Post-produzione & Servizi:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px 10px; border: 1px solid #000; font-size: 14pt; background: #f4f4f5;"><strong>TOTALE STIMATO:</strong></td>
+                        <td style="padding: 15px 10px; border: 1px solid #000; background: #f4f4f5;"></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div style="margin-top: 80px; font-size: 10pt; color: #555;">
+                <p><em>* Preventivo indicativo, valido 30 giorni. Eventuali stampe fallite a causa di geometrie non ottimali fornite dal cliente potrebbero richiedere una revisione tecnica dei costi. Le tolleranze dimensionali sono soggette alle caratteristiche del processo FDM/SLA.</em></p>
+                <div style="margin-top: 60px; display: flex; justify-content: space-between;">
+                    <div style="width: 280px; border-top: 1px solid #000; text-align: center; padding-top: 8px;">Firma Service 3D</div>
+                    <div style="width: 280px; border-top: 1px solid #000; text-align: center; padding-top: 8px;">Firma Accettazione Cliente</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODULO COMPILATO (Digitale) -->
+        <div class="a4-sheet print-filled">
+            <div class="print-title">MAKER BRIDGE - Preventivo Ufficiale Produzione</div>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 25px; font-size: 11pt;">
+                <div>
+                    <p><strong>Cliente:</strong> <span id="print-f-client" style="font-weight:bold; text-transform: uppercase;"></span></p>
+                    <p><strong>Progetto/Ordine:</strong> <span id="print-f-project"></span></p>
+                </div>
+                <div style="text-align: right;">
+                    <p><strong>Data Emissione:</strong> <span id="print-f-date"></span></p>
+                    <p><strong>Rif. Contatto:</strong> <span id="print-f-contact"></span></p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 10px; font-size:12pt; text-transform: uppercase;">Distinta Base (BOM)</h3>
+            <table class="print-table">
+                <thead>
+                    <tr>
+                        <th>Nome Componente</th>
+                        <th style="text-align: right;">Peso</th>
+                        <th style="text-align: right;">Tempo Lav.</th>
+                        <th style="text-align: right;">Costo Base (Mat+Mac)</th>
+                    </tr>
+                </thead>
+                <tbody id="print-f-tbody">
+                    <!-- Popolato da JS -->
+                </tbody>
+            </table>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 30px;">
+                <table style="width: 380px; border-collapse: collapse; font-size:11pt;">
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Somma Costi Base Produzione:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;" id="print-f-raw"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Fondo Gestione Rischio Fallimenti:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;" id="print-f-risk"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Manodopera & Post-Produzione:</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: right;" id="print-f-labor"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px 10px; border: 2px solid #000; font-size: 14pt; background: #f4f4f5;"><strong>TOTALE PREVENTIVO:</strong></td>
+                        <td style="padding: 15px 10px; border: 2px solid #000; background: #f4f4f5; text-align: right; font-weight:bold; font-size: 14pt;" id="print-f-total"></td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div style="margin-top: 80px; font-size: 10pt; color: #555;">
+                <p><em>* Il presente preventivo ha validità 30 giorni. Prezzi al netto di imposte di legge e spese di spedizione.</em></p>
+                <div style="margin-top: 60px; display: flex; justify-content: space-between;">
+                    <div style="width: 280px; border-top: 1px solid #000; text-align: center; padding-top: 8px;">Timbro / Firma Service</div>
+                    <div style="width: 280px; border-top: 1px solid #000; text-align: center; padding-top: 8px;">Firma per Accettazione Cliente</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DATA STRUCTURES & LOCAL STORAGE ---
+        let assembly = [];
+        let orders = []; // Database per il Gestionale
+        let currentPartType = 'internal'; // 'internal' or 'external'
+        let currentEditingOrderId = null; // ID dell'ordine aperto nel modale
+
+        // Standard 3D Printing To-Do List Checklist
+        const defaultChecklist = [
+            { id: 1, text: "Preparazione File (Slicing & Controllo Geometrie)", done: false },
+            { id: 2, text: "Preventivo inviato e Approvato dal cliente", done: false },
+            { id: 3, text: "Verifica disponibilità Materiale / Ordine effettuato", done: false },
+            { id: 4, text: "Manutenzione pre-stampa (Pulizia piatto, controllo ugello)", done: false },
+            { id: 5, text: "Stampa 3D in corso", done: false },
+            { id: 6, text: "Stampa completata con successo", done: false },
+            { id: 7, text: "Post-produzione (Rimozione supporti, lavaggio, curing)", done: false },
+            { id: 8, text: "Controllo Qualità & Tolleranze", done: false },
+            { id: 9, text: "Imballaggio e Spedizione / Pronto per il ritiro", done: false },
+            { id: 10, text: "Pagamento ricevuto", done: false }
+        ];
+
+        // --- NAVIGATION & VIEWS ---
+        function switchAppView(view) {
+            document.querySelectorAll('.app-view').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.btn-nav').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`view-${view}`).classList.add('active');
+            document.getElementById(`nav-${view}`).classList.add('active');
+            
+            if(view === 'dashboard') renderDashboard();
+        }
+
+        function switchTab(type) {
+            currentPartType = type;
+            document.getElementById('tab-internal').classList.remove('active');
+            document.getElementById('tab-external').classList.remove('active');
+            document.getElementById('content-internal').classList.remove('active');
+            document.getElementById('content-external').classList.remove('active');
+            
+            document.getElementById(`tab-${type}`).classList.add('active');
+            document.getElementById(`content-${type}`).classList.add('active');
+            
+            // Adjust dropzone text
+            if(type === 'external') {
+                document.getElementById('drop-text').innerText = "Outsourcing: Inserisci solo i dati manuali sotto";
+                document.getElementById('gcode-dropzone').style.opacity = '0.5';
+                document.getElementById('gcode-dropzone').style.pointerEvents = 'none';
+            } else {
+                document.getElementById('drop-text').innerText = "Trascina il file generato dallo Slicer qui, oppure clicca per sfogliare";
+                document.getElementById('gcode-dropzone').style.opacity = '1';
+                document.getElementById('gcode-dropzone').style.pointerEvents = 'auto';
+            }
+        }
+        
+        // --- CORE LOGIC: DATA MANAGEMENT ---
+        function loadData() {
+            try {
+                // Carica settings globali (Ammortamento)
+                const savedRate = localStorage.getItem('mb_hourly_rate');
+                const savedSetup = localStorage.getItem('mb_setup_fee');
+                if(savedRate) document.getElementById('global-hourly-rate').value = savedRate;
+                if(savedSetup) document.getElementById('global-setup-fee').value = savedSetup;
+
+                // Carica stato del Workspace
+                const wsData = JSON.parse(localStorage.getItem('mb_workspace') || '{}');
+                if(wsData.assembly) assembly = wsData.assembly;
+                if(wsData.projectName) document.getElementById('project-name').value = wsData.projectName;
+                if(wsData.clientName) document.getElementById('client-name').value = wsData.clientName;
+                if(wsData.clientContact) document.getElementById('client-contact').value = wsData.clientContact;
+                if(wsData.failRate) document.getElementById('calc-failure-rate').value = wsData.failRate;
+                if(wsData.margin) document.getElementById('calc-margin').value = wsData.margin;
+                if(wsData.labor) document.getElementById('calc-labor').value = wsData.labor;
+                if(wsData.spoolCost) document.getElementById('param-spool-cost').value = wsData.spoolCost;
+                if(wsData.spoolWeight) document.getElementById('param-spool-weight').value = wsData.spoolWeight;
+
+                // Carica Database Ordini
+                orders = JSON.parse(localStorage.getItem('mb_orders') || '[]');
+
+            } catch (e) { console.error("Error loading data", e); }
+            
+            renderAssembly();
+            updateOrderCount();
+        }
+
+        function saveWorkspaceState() {
+            const wsData = {
+                assembly: assembly,
+                projectName: document.getElementById('project-name').value,
+                clientName: document.getElementById('client-name').value,
+                clientContact: document.getElementById('client-contact').value,
+                failRate: document.getElementById('calc-failure-rate').value,
+                margin: document.getElementById('calc-margin').value,
+                labor: document.getElementById('calc-labor').value,
+                spoolCost: document.getElementById('param-spool-cost').value,
+                spoolWeight: document.getElementById('param-spool-weight').value
+            };
+            localStorage.setItem('mb_workspace', JSON.stringify(wsData));
+        }
+
+        function saveGlobalSettings() {
+            localStorage.setItem('mb_hourly_rate', document.getElementById('global-hourly-rate').value);
+            localStorage.setItem('mb_setup_fee', document.getElementById('global-setup-fee').value);
+        }
+        
+        function saveOrdersDb() {
+            localStorage.setItem('mb_orders', JSON.stringify(orders));
+            updateOrderCount();
+        }
+
+        function clearAllData() {
+            if(confirm("ATTENZIONE! Questo cancellerà tutti i preventivi e gli ordini salvati. Sei sicuro?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // --- UTILS ---
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function closeModalOnOutsideClick(event, id) { if (event.target === document.getElementById(id)) { closeModal(id); } }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = type === 'success' 
+                ? `<svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`
+                : `<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                
+            toast.innerHTML = `${icon} <span class="font-medium">${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { if(toast.parentNode) toast.remove(); }, 3000);
+        }
+        
+        function updateOrderCount() {
+            document.getElementById('nav-order-count').innerText = orders.length;
+        }
+
+        // --- STEP 1: G-CODE DRAG & DROP EXTRACTOR ---
+        const dropzone = document.getElementById('gcode-dropzone');
+        const extHours = document.getElementById('ext-hours');
+        const extGrams = document.getElementById('ext-grams');
+        const partName = document.getElementById('part-name');
+
+        function handleDragOver(e) { e.preventDefault(); dropzone.classList.add('dragover'); }
+        function handleDragLeave(e) { e.preventDefault(); dropzone.classList.remove('dragover'); }
+        function handleDrop(e) {
+            e.preventDefault(); dropzone.classList.remove('dragover');
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                parseGCodeFile(e.dataTransfer.files[0]);
+            }
+        }
+        function handleFileSelect(e) {
+            if (e.target.files && e.target.files.length > 0) {
+                parseGCodeFile(e.target.files[0]);
+            }
+        }
+
+        function highlightInputs() {
+            extHours.classList.remove('highlight-update');
+            extGrams.classList.remove('highlight-update');
+            void extHours.offsetWidth; 
+            extHours.classList.add('highlight-update');
+            extGrams.classList.add('highlight-update');
+        }
+
+        // SIMULATED G-CODE PARSER (Handles Prusa, SuperSlicer, Cura, Bambu)
+        function parseGCodeFile(file) {
+            if(currentPartType === 'external') return; // Disabilita drag&drop se in conto terzi
+            
+            dropzone.classList.add('success');
+            document.getElementById('drop-text').innerText = "Analisi: " + file.name + "...";
+            partName.value = file.name.replace(/\.(gcode|bgcode|3mf)$/i, '');
+
+            // Simulate parsing delay for large files
+            setTimeout(() => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    let timeHours = 0;
+                    let weightGrams = 0;
+
+                    // Basic regex heuristics
+                    const prusaTimeMatch = content.match(/estimated printing time \(normal mode\) = (?:(\d+)d\s*)?(?:(\d+)h\s*)?(?:(\d+)m\s*)?(?:(\d+)s)?/);
+                    const prusaWeightMatch = content.match(/filament used \[g\] = ([0-9.]+)/);
+                    const curaTimeMatch = content.match(/;TIME:(\d+)/);
+                    const bambuWeightMatch = content.match(/; total filament used \[g\] : ([0-9.]+)/);
+
+                    if(prusaWeightMatch || bambuWeightMatch) {
+                        weightGrams = parseFloat(prusaWeightMatch ? prusaWeightMatch[1] : bambuWeightMatch[1]);
+                        if(prusaTimeMatch) {
+                            let d = prusaTimeMatch[1] ? parseInt(prusaTimeMatch[1]) : 0;
+                            let h = prusaTimeMatch[2] ? parseInt(prusaTimeMatch[2]) : 0;
+                            let m = prusaTimeMatch[3] ? parseInt(prusaTimeMatch[3]) : 0;
+                            timeHours = (d * 24) + h + (m / 60);
+                        } else {
+                            timeHours = weightGrams / 35; // stima veloce se manca il tempo
+                        }
+                    } else if (curaTimeMatch) {
+                        timeHours = parseInt(curaTimeMatch[1]) / 3600;
+                        weightGrams = (timeHours * 10) + 15; // stima materiale base cura tempo
+                    } else {
+                        // Fallback simulato se formato totalmente sconosciuto
+                        weightGrams = Math.random() * 150 + 20;
+                        timeHours = weightGrams / 35;
+                    }
+
+                    extHours.value = timeHours.toFixed(2);
+                    extGrams.value = weightGrams.toFixed(0);
+                    
+                    highlightInputs();
+                    showToast("Dati Estratti dal file!");
+                    
+                    document.getElementById('drop-text').innerText = "Trascina il file generato dallo Slicer qui";
+                    setTimeout(() => dropzone.classList.remove('success'), 1000);
+                };
+                
+                // Legge solo un pezzo del file se gigante
+                if(file.size < 5000000) {
+                    reader.readAsText(file);
+                } else {
+                    const blob = file.slice(file.size - 50000, file.size); // Legge la fine del file dove ci sono i metadata
+                    reader.readAsText(blob);
+                }
+            }, 500);
+        }
+
+        // --- STEP 2 & 3: ASSEMBLY (BOM) MANAGEMENT ---
+        function addPartToAssembly() {
+            const name = partName.value.trim() || `Componente ${assembly.length + 1}`;
+            let part = {};
+
+            if (currentPartType === 'internal') {
+                const hours = parseFloat(extHours.value) || 0;
+                const grams = parseFloat(extGrams.value) || 0;
+                
+                if (hours === 0 && grams === 0) {
+                    showToast("Estrai un GCode o inserisci Peso/Tempo manuali", "error");
+                    return;
+                }
+
+                const hRate = parseFloat(document.getElementById('global-hourly-rate').value) || 1.5;
+                const setup = parseFloat(document.getElementById('global-setup-fee').value) || 3.0;
+                const spoolCost = parseFloat(document.getElementById('param-spool-cost').value) || 25;
+                const spoolWeight = parseFloat(document.getElementById('param-spool-weight').value) || 1000;
+                
+                // Raw Cost Calculation (Material + Machine Time + Setup)
+                const matCost = (spoolCost / spoolWeight) * grams;
+                const machineCost = (hRate * hours) + setup;
+                const rawCost = matCost + machineCost;
+
+                part = {
+                    id: Date.now(), type: 'internal', name: name, hours: hours, grams: grams, rawCost: rawCost,
+                    details: `Mat: €${matCost.toFixed(2)} | Mac: €${machineCost.toFixed(2)}`
+                };
+            } else {
+                // External Part Logic (Outsourcing)
+                const provider = document.getElementById('ext-provider').value;
+                const unitCost = parseFloat(document.getElementById('ext-unit-cost').value) || 0;
+                const qty = parseInt(document.getElementById('ext-qty').value) || 1;
+                const shipping = parseFloat(document.getElementById('ext-shipping').value) || 0;
+
+                if (unitCost === 0) {
+                    showToast("Inserisci un costo unitario valido per il fornitore esterno.", "error");
+                    return;
+                }
+
+                const rawCost = (unitCost * qty) + shipping;
+
+                part = {
+                    id: Date.now(), type: 'external', name: `${name} (x${qty})`, provider: provider, hours: 0, grams: 0, qty: qty, shipping: shipping, rawCost: rawCost,
+                    details: `Service: ${provider}`
+                };
+            }
+
+            assembly.push(part);
+            saveWorkspaceState();
+            renderAssembly();
+            showToast(currentPartType === 'internal' ? `Aggiunto In-House: ${name}` : `Aggiunto Outsource: ${name}`);
+            
+            // Reset form
+            partName.value = '';
+            extHours.value = '0'; extGrams.value = '0';
+            if(currentPartType === 'external') { document.getElementById('ext-unit-cost').value = '0.00'; }
+        }
+
+        function removePart(id) {
+            assembly = assembly.filter(p => p.id !== id);
+            saveWorkspaceState();
+            renderAssembly();
+        }
+
+        function clearAssembly() {
+            if(assembly.length === 0) return;
+            if(confirm("Svuotare la distinta base attuale?")) {
+                assembly = [];
+                saveWorkspaceState();
+                renderAssembly();
+            }
+        }
+
+        function renderAssembly() {
+            const list = document.getElementById('assembly-list');
+            list.innerHTML = '';
+
+            let totHours = 0; let totGrams = 0; let totRawCost = 0;
+
+            if (assembly.length === 0) {
+                list.innerHTML = `<tr><td colspan="5" class="text-center text-[var(--text-secondary)] italic py-8">Nessun componente nella Distinta (BOM). Aggiungine uno.</td></tr>`;
+            } else {
+                assembly.forEach(p => {
+                    totHours += p.hours; totGrams += p.grams; totRawCost += p.rawCost;
+
+                    const tr = document.createElement('tr');
+                    if (p.type === 'internal') {
+                        tr.innerHTML = `
+                            <td class="font-semibold text-white truncate max-w-[200px]" title="${p.name}">
+                                <span class="badge bg-cyan-900/50 text-cyan-400 border border-cyan-700/50 mr-2">IN-HOUSE</span>
+                                ${p.name}
+                                <div class="text-[10px] text-gray-500 font-normal mt-1">${p.details}</div>
+                            </td>
+                            <td class="text-right font-mono">${p.grams.toFixed(0)}</td>
+                            <td class="text-right font-mono">${p.hours.toFixed(2)}</td>
+                            <td class="text-right font-mono text-[var(--text-secondary)]">€ ${p.rawCost.toFixed(2)}</td>
+                            <td class="text-right"><button onclick="removePart(${p.id})" class="text-red-500 hover:text-red-400 font-bold px-2 py-1 rounded hover:bg-red-500/20 transition">&times;</button></td>
+                        `;
+                    } else {
+                        let provColor = p.provider === 'Weerg' ? 'bg-blue-900/50 text-blue-400 border-blue-700/50' : 
+                                      p.provider.includes('PCB') ? 'bg-indigo-900/50 text-indigo-400 border-indigo-700/50' : 
+                                      'bg-purple-900/50 text-purple-400 border-purple-700/50';
+                                      
+                        tr.innerHTML = `
+                            <td class="font-semibold text-white truncate max-w-[200px]" title="${p.name}">
+                                <span class="badge ${provColor} mr-2">OUT: ${p.provider}</span>
+                                ${p.name}
+                            </td>
+                            <td class="text-right font-mono text-[var(--text-secondary)] text-xs italic">-</td>
+                            <td class="text-right font-mono text-[var(--text-secondary)] text-xs italic">Esterno</td>
+                            <td class="text-right font-mono text-purple-300">€ ${p.rawCost.toFixed(2)}</td>
+                            <td class="text-right"><button onclick="removePart(${p.id})" class="text-red-500 hover:text-red-400 font-bold px-2 py-1 rounded hover:bg-red-500/20 transition">&times;</button></td>
+                        `;
+                    }
+                    list.appendChild(tr);
+                });
+            }
+
+            document.getElementById('tot-hours').innerText = totHours.toFixed(2);
+            document.getElementById('tot-grams').innerText = totGrams.toFixed(0);
+            document.getElementById('tot-raw-cost').innerText = `€ ${totRawCost.toFixed(2)}`;
+
+            calculateFinalQuote(totRawCost);
+        }
+
+        // --- STEP 4: ENTERPRISE QUOTE CALCULATOR ---
+        function calculateFinalQuote(forceRawCost = null) {
+            const rawCostStr = document.getElementById('tot-raw-cost').innerText.replace('€', '').trim();
+            const rawCost = forceRawCost !== null ? forceRawCost : parseFloat(rawCostStr);
+            
+            const failRate = parseFloat(document.getElementById('calc-failure-rate').value) / 100 || 0;
+            const margin = parseFloat(document.getElementById('calc-margin').value) / 100 || 0;
+            const labor = parseFloat(document.getElementById('calc-labor').value) || 0;
+
+            // 1. Fondo Rischio (applicato solo al costo vivo)
+            const riskCost = rawCost * failRate;
+            const costWithRisk = rawCost + riskCost;
+
+            // 2. Aggiunta Manodopera Extra
+            const totalCostBase = costWithRisk + labor;
+
+            // 3. Prezzo di Vendita (Applicazione Margine Ricarico su tutto)
+            let finalPrice = 0;
+            if (margin < 1) {
+                finalPrice = totalCostBase / (1 - margin);
+            } else {
+                 finalPrice = totalCostBase * 2; // Sicurezza fallback se inseriscono 100%
+            }
+
+            // Update UI
+            document.getElementById('lbl-risk').innerText = (failRate * 100).toFixed(0);
+            document.getElementById('final-raw').innerText = `€ ${rawCost.toFixed(2)}`;
+            document.getElementById('final-risk').innerText = `+ € ${riskCost.toFixed(2)}`;
+            document.getElementById('final-labor').innerText = `+ € ${labor.toFixed(2)}`;
+            document.getElementById('final-quote').innerText = `€ ${finalPrice.toFixed(2)}`;
+        }
+
+        // --- VIEW 2: GESTIONALE ORDINI (CRM) ---
+        function saveToOrders() {
+            if(assembly.length === 0) {
+                showToast("Distinta base vuota. Aggiungi componenti prima di salvare l'ordine.", "error");
+                return;
+            }
+
+            const projectName = document.getElementById('project-name').value.trim() || `Progetto senza nome #${Math.floor(Math.random()*1000)}`;
+            const clientName = document.getElementById('client-name').value.trim() || `Cliente Sconosciuto`;
+            const finalQuote = document.getElementById('final-quote').innerText;
+            
+            const newOrder = {
+                id: Date.now().toString(),
+                projectName: projectName,
+                clientName: clientName,
+                clientContact: document.getElementById('client-contact').value.trim(),
+                date: new Date().toLocaleDateString('it-IT'),
+                total: finalQuote,
+                status: 'new', // new, printing, post, done
+                assembly: JSON.parse(JSON.stringify(assembly)), // deep copy
+                checklist: JSON.parse(JSON.stringify(defaultChecklist)),
+                notes: ""
+            };
+
+            orders.unshift(newOrder); // Aggiungi in cima
+            saveOrdersDb();
+            
+            showToast(`Ordine "${projectName}" salvato nel gestionale!`, "success");
+            
+            // Svuota workspace per nuovo progetto (opzionale, ma raccomandato in workflow reali)
+            if(confirm("Ordine salvato. Vuoi svuotare il preventivatore per un nuovo progetto?")) {
+                assembly = [];
+                document.getElementById('project-name').value = '';
+                document.getElementById('client-name').value = '';
+                document.getElementById('client-contact').value = '';
+                saveWorkspaceState();
+                renderAssembly();
+            }
+        }
+
+        function renderDashboard() {
+            const grid = document.getElementById('orders-grid');
+            const noMsg = document.getElementById('no-orders-msg');
+            grid.innerHTML = '';
+
+            if (orders.length === 0) {
+                grid.classList.add('hidden');
+                noMsg.classList.remove('hidden');
+            } else {
+                grid.classList.remove('hidden');
+                noMsg.classList.add('hidden');
+
+                orders.forEach(o => {
+                    let badgeClass, badgeText;
+                    switch(o.status) {
+                        case 'new': badgeClass = 'status-new'; badgeText = 'Nuovo'; break;
+                        case 'printing': badgeClass = 'status-printing'; badgeText = 'In Lavorazione'; break;
+                        case 'post': badgeClass = 'status-post'; badgeText = 'Post-Produzione'; break;
+                        case 'done': badgeClass = 'status-done'; badgeText = 'Completato'; break;
+                    }
+
+                    // Calcola % completamento ToDo list
+                    const doneCount = o.checklist.filter(c => c.done).length;
+                    const progress = Math.round((doneCount / o.checklist.length) * 100);
+
+                    const card = document.createElement('div');
+                    card.className = 'order-card cursor-pointer flex flex-col justify-between';
+                    card.onclick = () => openOrderDetails(o.id);
+                    card.innerHTML = `
+                        <div>
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="badge ${badgeClass}">${badgeText}</span>
+                                <span class="text-xs text-[var(--text-secondary)]">${o.date}</span>
+                            </div>
+                            <h3 class="font-bold text-white text-lg truncate" title="${o.projectName}">${o.projectName}</h3>
+                            <p class="text-sm text-[var(--text-secondary)] truncate mb-4 flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                ${o.clientName}
+                            </p>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-end mb-2">
+                                <span class="text-[var(--text-secondary)] text-xs">Pezzi: ${o.assembly.length}</span>
+                                <span class="font-mono font-bold text-[var(--accent-green)] text-xl">${o.total}</span>
+                            </div>
+                            <!-- Progress Bar -->
+                            <div class="w-full bg-black/50 rounded-full h-1.5 mt-2 overflow-hidden border border-[var(--border-subtle)]">
+                                <div class="bg-blue-500 h-1.5 rounded-full" style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+        }
+
+        // --- ORDER DETAILS MODAL ---
+        function openOrderDetails(id) {
+            currentEditingOrderId = id;
+            const order = orders.find(o => o.id === id);
+            if(!order) return;
+
+            document.getElementById('detail-project').innerText = order.projectName;
+            document.getElementById('detail-date').innerText = `Salvato il: ${order.date}`;
+            document.getElementById('detail-client').innerText = order.clientName;
+            document.getElementById('detail-contact').innerText = order.clientContact || "Nessun contatto";
+            document.getElementById('detail-total').innerText = order.total;
+            document.getElementById('detail-status').value = order.status;
+            document.getElementById('detail-notes').value = order.notes || "";
+
+            // Checklists
+            const listContainer = document.getElementById('detail-checklist');
+            listContainer.innerHTML = '';
+            order.checklist.forEach(item => {
+                const label = document.createElement('label');
+                label.className = `flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition ${item.done ? 'bg-blue-900/20 border-blue-900/50' : 'bg-black/40 border-[var(--border-subtle)] hover:bg-[var(--bg-surface-hover)]'}`;
+                label.innerHTML = `
+                    <input type="checkbox" class="w-5 h-5 accent-blue-500 rounded mt-0.5" ${item.done ? 'checked' : ''} onchange="toggleChecklistItem(${item.id})">
+                    <span class="text-sm font-medium ${item.done ? 'text-blue-300 line-through opacity-70' : 'text-gray-200'}">${item.text}</span>
+                `;
+                listContainer.appendChild(label);
+            });
+
+            // Handlers buttons
+            document.getElementById('btn-load-workspace').onclick = () => {
+                if(confirm("Vuoi caricare questo ordine nel Preventivatore? Sostituirà il lavoro non salvato attualmente aperto.")) {
+                    assembly = JSON.parse(JSON.stringify(order.assembly));
+                    document.getElementById('project-name').value = order.projectName;
+                    document.getElementById('client-name').value = order.clientName;
+                    document.getElementById('client-contact').value = order.clientContact;
+                    saveWorkspaceState();
+                    renderAssembly();
+                    closeModal('modal-order-details');
+                    switchAppView('workspace');
+                    showToast("Ordine caricato nel Preventivatore");
+                }
+            };
+
+            document.getElementById('btn-delete-order').onclick = () => {
+                if(confirm("Eliminare definitivamente questo ordine? Non è reversibile.")) {
+                    orders = orders.filter(o => o.id !== id);
+                    saveOrdersDb();
+                    renderDashboard();
+                    closeModal('modal-order-details');
+                    showToast("Ordine eliminato", "error");
+                }
+            };
+
+            openModal('modal-order-details');
+        }
+
+        function updateDetailStatus() {
+            if(!currentEditingOrderId) return;
+            const order = orders.find(o => o.id === currentEditingOrderId);
+            if(order) {
+                order.status = document.getElementById('detail-status').value;
+                saveOrdersDb();
+                renderDashboard(); // Aggiorna in background
+            }
+        }
+
+        function toggleChecklistItem(itemId) {
+            if(!currentEditingOrderId) return;
+            const order = orders.find(o => o.id === currentEditingOrderId);
+            if(order) {
+                const item = order.checklist.find(c => c.id === itemId);
+                if(item) {
+                    item.done = !item.done;
+                    saveOrdersDb();
+                    openOrderDetails(currentEditingOrderId); // Re-render modale per effetti visivi
+                    renderDashboard(); // Aggiorna progress bar in dashboard
+                }
+            }
+        }
+
+        function saveOrderNotes() {
+            if(!currentEditingOrderId) return;
+            const order = orders.find(o => o.id === currentEditingOrderId);
+            if(order) {
+                order.notes = document.getElementById('detail-notes').value;
+                saveOrdersDb();
+            }
+        }
+
+        // --- STAMPA A4 MANAGER ---
+        function printBlankQuote() {
+            document.body.setAttribute('data-print-target', 'blank');
+            window.print();
+        }
+
+        function printFilledQuote() {
+            if(assembly.length === 0) {
+                showToast("Distinta Base vuota. Aggiungi componenti prima di stampare.", "error");
+                return;
+            }
+
+            // Popola l'intestazione
+            document.getElementById('print-f-client').innerText = document.getElementById('client-name').value || "Nominativo non inserito";
+            document.getElementById('print-f-project').innerText = document.getElementById('project-name').value || "Non specificato";
+            document.getElementById('print-f-contact').innerText = document.getElementById('client-contact').value || "N/D";
+            document.getElementById('print-f-date').innerText = new Date().toLocaleDateString('it-IT');
+            
+            // Popola la tabella
+            const tbody = document.getElementById('print-f-tbody');
+            tbody.innerHTML = '';
+            
+            assembly.forEach(p => {
+                if (p.type === 'internal') {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${p.name}</strong> <span style="font-size:8pt; color:#666;">(Produzione In-House)</span></td>
+                            <td style="text-align: right; font-family: monospace;">${p.grams.toFixed(0)} g</td>
+                            <td style="text-align: right; font-family: monospace;">${p.hours.toFixed(2)} h</td>
+                            <td style="text-align: right; font-family: monospace;">€ ${p.rawCost.toFixed(2)}</td>
+                        </tr>
+                    `;
+                } else {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${p.name}</strong> <span style="font-size:8pt; color:#800080;">(Outsourcing: ${p.provider})</span></td>
+                            <td style="text-align: right; font-family: monospace; color:#999; font-size:9pt;">N/A</td>
+                            <td style="text-align: right; font-family: monospace; color:#999; font-size:9pt;">Esterno</td>
+                            <td style="text-align: right; font-family: monospace;">€ ${p.rawCost.toFixed(2)}</td>
+                        </tr>
+                    `;
+                }
+            });
+
+            // Popola i totali
+            document.getElementById('print-f-raw').innerText = document.getElementById('final-raw').innerText;
+            document.getElementById('print-f-risk').innerText = document.getElementById('final-risk').innerText;
+            document.getElementById('print-f-labor').innerText = document.getElementById('final-labor').innerText;
+            document.getElementById('print-f-total').innerText = document.getElementById('final-quote').innerText;
+
+            // Avvia la stampa
+            document.body.setAttribute('data-print-target', 'filled');
+            setTimeout(() => window.print(), 100);
+        }
+
+        window.addEventListener('afterprint', () => {
+            document.body.removeAttribute('data-print-target');
+        });
+
+        // Init
+        window.onload = loadData;
+    </script>
+</body>
+</html>
