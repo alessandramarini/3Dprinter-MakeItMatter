@@ -238,14 +238,18 @@
                             <label class="label">Riferimento Progetto / Ordine</label>
                             <input type="text" id="project-name" class="input font-bold" placeholder="Es. Prototipo Ingranaggio V3" onchange="saveWorkspaceState()">
                         </div>
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div class="input-group">
                                 <label class="label">Nome Cliente / Azienda</label>
                                 <input type="text" id="client-name" class="input" placeholder="Acme Corp" onchange="saveWorkspaceState()">
                             </div>
                             <div class="input-group">
-                                <label class="label">Contatto (Email/Tel)</label>
-                                <input type="text" id="client-contact" class="input" placeholder="info@acme.com" onchange="saveWorkspaceState()">
+                                <label class="label">Email</label>
+                                <input type="email" id="client-email" class="input" placeholder="info@acme.com" onchange="saveWorkspaceState()">
+                            </div>
+                            <div class="input-group">
+                                <label class="label">Cellulare (WhatsApp)</label>
+                                <input type="tel" id="client-phone" class="input" placeholder="+39 333 1234567" onchange="saveWorkspaceState()">
                             </div>
                         </div>
                     </div>
@@ -561,7 +565,10 @@
                     <div>
                         <p class="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-1">Cliente</p>
                         <p id="detail-client" class="text-sm font-semibold text-white">Nome Cliente</p>
-                        <p id="detail-contact" class="text-xs text-[var(--accent-cyan)]">Contatto</p>
+                        <div class="flex flex-col gap-1 mt-1">
+                            <p id="detail-email" class="text-xs text-[var(--text-secondary)]">Email</p>
+                            <p id="detail-phone" class="text-xs text-[var(--accent-green)] font-medium">Telefono</p>
+                        </div>
                     </div>
 
                     <div class="p-4 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-lg">
@@ -614,7 +621,8 @@
             <div style="display: flex; justify-content: space-between; margin-bottom: 25px; font-size: 11pt;">
                 <div style="width: 48%;">
                     <p style="margin-bottom: 8px;"><strong>Cliente / Azienda:</strong> <span class="write-line"></span></p>
-                    <p><strong>Contatto (Email/Tel):</strong> <span class="write-line"></span></p>
+                    <p style="margin-bottom: 8px;"><strong>Email:</strong> <span class="write-line"></span></p>
+                    <p><strong>Cellulare:</strong> <span class="write-line"></span></p>
                 </div>
                 <div style="width: 48%;">
                     <p style="margin-bottom: 8px;"><strong>Data:</strong> <span class="write-line"></span></p>
@@ -679,7 +687,8 @@
                 </div>
                 <div style="text-align: right;">
                     <p><strong>Data Emissione:</strong> <span id="print-f-date"></span></p>
-                    <p><strong>Rif. Contatto:</strong> <span id="print-f-contact"></span></p>
+                    <p><strong>Email:</strong> <span id="print-f-email"></span></p>
+                    <p><strong>Cellulare:</strong> <span id="print-f-phone"></span></p>
                 </div>
             </div>
 
@@ -798,7 +807,10 @@
                 if(wsData.assembly) assembly = wsData.assembly;
                 if(wsData.projectName) document.getElementById('project-name').value = wsData.projectName;
                 if(wsData.clientName) document.getElementById('client-name').value = wsData.clientName;
-                if(wsData.clientContact) document.getElementById('client-contact').value = wsData.clientContact;
+                if(wsData.clientEmail) document.getElementById('client-email').value = wsData.clientEmail;
+                if(wsData.clientPhone) document.getElementById('client-phone').value = wsData.clientPhone;
+                // Retrocompatibilità per vecchi salvataggi
+                if(wsData.clientContact && !wsData.clientEmail) document.getElementById('client-email').value = wsData.clientContact;
                 if(wsData.failRate) document.getElementById('calc-failure-rate').value = wsData.failRate;
                 if(wsData.margin) document.getElementById('calc-margin').value = wsData.margin;
                 if(wsData.labor) document.getElementById('calc-labor').value = wsData.labor;
@@ -819,7 +831,8 @@
                 assembly: assembly,
                 projectName: document.getElementById('project-name').value,
                 clientName: document.getElementById('client-name').value,
-                clientContact: document.getElementById('client-contact').value,
+                clientEmail: document.getElementById('client-email').value,
+                clientPhone: document.getElementById('client-phone').value,
                 failRate: document.getElementById('calc-failure-rate').value,
                 margin: document.getElementById('calc-margin').value,
                 labor: document.getElementById('calc-labor').value,
@@ -1131,7 +1144,8 @@
                 id: Date.now().toString(),
                 projectName: projectName,
                 clientName: clientName,
-                clientContact: document.getElementById('client-contact').value.trim(),
+                clientEmail: document.getElementById('client-email').value.trim(),
+                clientPhone: document.getElementById('client-phone').value.trim(),
                 date: new Date().toLocaleDateString('it-IT'),
                 total: finalQuote,
                 status: 'new', // new, printing, post, done
@@ -1150,7 +1164,8 @@
                 assembly = [];
                 document.getElementById('project-name').value = '';
                 document.getElementById('client-name').value = '';
-                document.getElementById('client-contact').value = '';
+                document.getElementById('client-email').value = '';
+                document.getElementById('client-phone').value = '';
                 saveWorkspaceState();
                 renderAssembly();
             }
@@ -1183,7 +1198,12 @@
 
                     const card = document.createElement('div');
                     card.className = 'order-card cursor-pointer flex flex-col justify-between';
-                    card.onclick = () => openOrderDetails(o.id);
+                    card.onclick = (e) => {
+                        // Evita di aprire il modale se clicco sul menu a tendina dello stato
+                        if (e.target.tagName !== 'SELECT' && e.target.tagName !== 'A' && e.target.closest('a') === null) {
+                            openOrderDetails(o.id);
+                        }
+                    };
                     card.innerHTML = `
                         <div>
                             <div class="flex justify-between items-start mb-3">
@@ -1191,10 +1211,11 @@
                                 <span class="text-xs text-[var(--text-secondary)]">${o.date}</span>
                             </div>
                             <h3 class="font-bold text-white text-lg truncate" title="${o.projectName}">${o.projectName}</h3>
-                            <p class="text-sm text-[var(--text-secondary)] truncate mb-4 flex items-center gap-1">
+                            <p class="text-sm text-[var(--text-secondary)] truncate mb-2 flex items-center gap-1">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                                 ${o.clientName}
                             </p>
+                            ${o.clientPhone ? `<a href="https://wa.me/${o.clientPhone.replace(/[^0-9+]/g, '')}" target="_blank" onclick="event.stopPropagation()" class="text-xs text-[var(--accent-green)] hover:underline inline-flex items-center gap-1 mb-3"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg> WhatsApp: ${o.clientPhone}</a>` : ''}
                         </div>
                         <div>
                             <div class="flex justify-between items-end mb-2">
@@ -1204,6 +1225,17 @@
                             <!-- Progress Bar -->
                             <div class="w-full bg-black/50 rounded-full h-1.5 mt-2 overflow-hidden border border-[var(--border-subtle)]">
                                 <div class="bg-blue-500 h-1.5 rounded-full" style="width: ${progress}%"></div>
+                            </div>
+                            
+                            <!-- Quick Status Update -->
+                            <div class="mt-4 flex justify-between items-center border-t border-[var(--border-subtle)] pt-3">
+                                <span class="text-[10px] uppercase text-[var(--text-secondary)] font-bold">Stato Rapido:</span>
+                                <select class="select text-xs py-1.5 px-2 h-auto bg-[var(--bg-base)] border-[var(--border-subtle)] w-36 cursor-pointer" onchange="quickUpdateStatus('${o.id}', this.value); event.stopPropagation();">
+                                    <option value="new" ${o.status === 'new' ? 'selected' : ''}>Da Iniziare</option>
+                                    <option value="printing" ${o.status === 'printing' ? 'selected' : ''}>In Stampa</option>
+                                    <option value="post" ${o.status === 'post' ? 'selected' : ''}>Post-Produzione</option>
+                                    <option value="done" ${o.status === 'done' ? 'selected' : ''}>Consegnato</option>
+                                </select>
                             </div>
                         </div>
                     `;
@@ -1221,7 +1253,16 @@
             document.getElementById('detail-project').innerText = order.projectName;
             document.getElementById('detail-date').innerText = `Salvato il: ${order.date}`;
             document.getElementById('detail-client').innerText = order.clientName;
-            document.getElementById('detail-contact').innerText = order.clientContact || "Nessun contatto";
+            
+            document.getElementById('detail-email').innerHTML = order.clientEmail ? `<a href="mailto:${order.clientEmail}" class="hover:underline text-blue-400">${order.clientEmail}</a>` : 'Nessuna email salvata';
+            
+            if (order.clientPhone) {
+                const waNumber = order.clientPhone.replace(/[^0-9+]/g, ''); // Pulisce il numero per l'URL di Whatsapp
+                document.getElementById('detail-phone').innerHTML = `<a href="https://wa.me/${waNumber}" target="_blank" class="hover:underline flex items-center gap-1"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg> WhatsApp</a>`;
+            } else {
+                document.getElementById('detail-phone').innerText = 'Nessun telefono salvato';
+            }
+            
             document.getElementById('detail-total').innerText = order.total;
             document.getElementById('detail-status').value = order.status;
             document.getElementById('detail-notes').value = order.notes || "";
@@ -1245,7 +1286,8 @@
                     assembly = JSON.parse(JSON.stringify(order.assembly));
                     document.getElementById('project-name').value = order.projectName;
                     document.getElementById('client-name').value = order.clientName;
-                    document.getElementById('client-contact').value = order.clientContact;
+                    document.getElementById('client-email').value = order.clientEmail || '';
+                    document.getElementById('client-phone').value = order.clientPhone || '';
                     saveWorkspaceState();
                     renderAssembly();
                     closeModal('modal-order-details');
@@ -1274,6 +1316,17 @@
                 order.status = document.getElementById('detail-status').value;
                 saveOrdersDb();
                 renderDashboard(); // Aggiorna in background
+            }
+        }
+
+        // Nuovo metodo per l'aggiornamento rapido dalla dashboard
+        function quickUpdateStatus(orderId, newStatus) {
+            const order = orders.find(o => o.id === orderId);
+            if(order) {
+                order.status = newStatus;
+                saveOrdersDb();
+                renderDashboard(); // Aggiorna la vista
+                showToast("Stato aggiornato correttamente", "success");
             }
         }
 
@@ -1315,7 +1368,8 @@
             // Popola l'intestazione
             document.getElementById('print-f-client').innerText = document.getElementById('client-name').value || "Nominativo non inserito";
             document.getElementById('print-f-project').innerText = document.getElementById('project-name').value || "Non specificato";
-            document.getElementById('print-f-contact').innerText = document.getElementById('client-contact').value || "N/D";
+            document.getElementById('print-f-email').innerText = document.getElementById('client-email').value || "N/D";
+            document.getElementById('print-f-phone').innerText = document.getElementById('client-phone').value || "N/D";
             document.getElementById('print-f-date').innerText = new Date().toLocaleDateString('it-IT');
             
             // Popola la tabella
